@@ -1,0 +1,26 @@
+# Secrets: never commit real keys
+.env
+.env.*
+!.env.example
+
+# Both databases ARE committed (data/campus_customs.db = original, data/campus_customs_new.db = working copy)
+*.db-journal
+data.zip
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Node / Vite
+node_modules/
+dist/
+
+# Runtime files (audit_trail.json itself IS committed)
+output/*.lock
+output/*.tmp
+output/pending_approvals.json
+
+# OS / editor
+.DS_Store

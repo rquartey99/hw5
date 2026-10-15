@@ -1,0 +1,109 @@
+{
+  "server": "campus-customs",
+  "config": ".mcp.json (project root)",
+  "database": "Homeworks/Homework-5/data/campus_customs_new.db",
+  "tested_on": "2026-10-14",
+  "method": "Claude Code (vibe coder) called each tool directly through the connected campus-customs MCP server; every key value was then re-checked with direct SQL on campus_customs_new.db.",
+  "tests": [
+    {
+      "ticket": 101,
+      "prompt": "Can ticket 101 ship from stock? If not, what restock is pending and what's its status?",
+      "tool": "check_order_fulfillment",
+      "arguments": { "ticket_id": 101 },
+      "output": {
+        "today": "2026-08-31",
+        "ticket_id": 101,
+        "requester": "Tauhid Zaman",
+        "sku": "CC-TEE-WHITE",
+        "size": "S",
+        "product": "Classic Bulldog Tee",
+        "location": "Aisle B",
+        "qty_wanted": 1,
+        "qty_on_hand": 0,
+        "can_ship_from_stock": false,
+        "shortfall": 1,
+        "linked_restock_invoice": {
+          "id": 501,
+          "amount": 840,
+          "due_date": "2026-08-28",
+          "status": "open",
+          "description": "Rush reprint CC-TEE-WHITE S",
+          "vendor": "Bulldog Print Co",
+          "specialty": "apparel reprint",
+          "lead_days": 5,
+          "days_overdue": 3
+        }
+      },
+      "db_check": {
+        "sql": "tickets 101 JOIN inventory (sku,size) JOIN invoices 501 JOIN vendors 1, desk.date_today",
+        "db_values": { "requester": "Tauhid Zaman", "on_hand": 0, "location": "Aisle B", "invoice_amount": 840.0, "due_date": "2026-08-28", "status": "open", "vendor": "Bulldog Print Co", "lead_days": 5, "days_overdue": 3 },
+        "matches": true
+      }
+    },
+    {
+      "ticket": 102,
+      "prompt": "Ticket 102 says rent is due. How much cash do we have, what bills are due or overdue, and can we cover them all?",
+      "tool": "get_cash_position",
+      "arguments": {},
+      "output": {
+        "today": "2026-08-31",
+        "accounts": [{ "name": "checking", "balance": 3400, "date": "2026-08-31" }],
+        "total_cash": 3400,
+        "rent_due": [
+          { "lease_id": 1, "space_name": "Chapel Street shop", "landlord": "Elm City Properties", "amount": 2400, "next_due": "2026-09-02", "days_until_due": 2 }
+        ],
+        "open_invoices": [
+          { "invoice_id": 501, "vendor": "Bulldog Print Co", "amount": 840, "due_date": "2026-08-28", "description": "Rush reprint CC-TEE-WHITE S", "days_until_due": -3 }
+        ],
+        "payments_made": [],
+        "total_owed": 3240,
+        "cash_left_if_all_paid": 160,
+        "can_cover_all": true
+      },
+      "db_check": {
+        "sql": "cash_accounts, leases, SUM(invoices.amount WHERE status='open'), COUNT(payments)",
+        "db_values": { "balance": 3400.0, "monthly_rent": 2400.0, "next_due": "2026-09-02", "open_invoices_total": 840.0, "payments_count": 0, "left_over": 160.0 },
+        "matches": true
+      }
+    },
+    {
+      "ticket": 103,
+      "prompt": "Ticket 103: the Yale AI Club wants 20 navy hoodies in size M at a bulk discount. Quote it at 15% off and tell me the profit, the deepest discount that still covers cost, and whether we have the stock.",
+      "tool": "quote_bulk_discount",
+      "arguments": { "sku": "CC-HOOD-NAVY", "size": "M", "qty": 20, "discount_pct": 15 },
+      "output": {
+        "sku": "CC-HOOD-NAVY",
+        "product": "Basic Hoodie Big Yale",
+        "size": "M",
+        "qty": 20,
+        "unit_cost": 22,
+        "list_price": 58,
+        "discount_pct": 15,
+        "unit_price": 49.3,
+        "order_total": 986,
+        "profit_per_unit": 27.3,
+        "order_profit": 546,
+        "above_cost": true,
+        "max_discount_pct_at_cost": 62.1,
+        "qty_on_hand": 8,
+        "shortfall": 12,
+        "stock_all_sizes": [
+          { "size": "S", "qty": 4 },
+          { "size": "M", "qty": 8 },
+          { "size": "L", "qty": 14 },
+          { "size": "XL", "qty": 6 }
+        ]
+      },
+      "db_check": {
+        "sql": "pricing CC-HOOD-NAVY JOIN inventory size M; list_price*0.85; (1-unit_cost/list_price)*100",
+        "db_values": { "unit_cost": 22.0, "list_price": 58.0, "on_hand_M": 8, "unit_price_at_15pct": 49.3, "max_discount_pct": 62.1 },
+        "matches": true
+      }
+    }
+  ],
+  "database_unchanged": {
+    "note": "Tools open the DB read-only; SHA-1 of both files identical after testing.",
+    "campus_customs.db": "f447ca6a2766a90f3c1f81215c8f774ab109ea4c",
+    "campus_customs_new.db": "f447ca6a2766a90f3c1f81215c8f774ab109ea4c"
+  }
+}

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Customs · Desk Tickets</title>
+<style>
+  :root {
+    --green-900: #14532d;
+    --green-700: #15803d;
+    --green-600: #16a34a;
+    --green-100: #dcfce7;
+    --green-50:  #f0fdf4;
+    --grey-900: #1f2328;
+    --grey-700: #3f4650;
+    --grey-500: #6b7280;
+    --grey-300: #d1d5db;
+    --grey-200: #e5e7eb;
+    --grey-100: #f3f4f6;
+    --grey-50:  #f9fafb;
+    --amber: #b45309;
+    --red: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--grey-100);
+    color: var(--grey-900);
+    line-height: 1.5;
+  }
+  header {
+    background: var(--grey-900);
+    color: #fff;
+    padding: 22px 32px 0;
+  }
+  .brand { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .brand h1 { margin: 0; font-size: 22px; letter-spacing: .3px; }
+  .brand h1 span { color: #86efac; }
+  .desk-date { font-size: 13px; color: var(--grey-300); }
+  .desk-date b { color: #fff; }
+  nav { display: flex; gap: 4px; margin-top: 18px; flex-wrap: wrap; }
+  nav button {
+    border: 0; cursor: pointer;
+    background: transparent; color: var(--grey-300);
+    padding: 10px 18px; font-size: 14px; font-weight: 600;
+    border-radius: 8px 8px 0 0;
+  }
+  nav button:hover { color: #fff; background: rgba(255,255,255,.06); }
+  nav button.active { background: var(--grey-100); color: var(--green-900); }
+  nav button .num { font-variant-numeric: tabular-nums; }
+  nav .sep { width: 1px; background: var(--grey-700); margin: 8px 6px; }
+  main { max-width: 1040px; margin: 0 auto; padding: 28px 32px 60px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .ticket-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .ticket-head h2 { margin: 0; font-size: 24px; }
+  .badge {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    padding: 2px 10px; border-radius: 999px;
+    background: var(--grey-200); color: var(--grey-700);
+  }
+  .badge.open { background: var(--green-100); color: var(--green-900); }
+  .sub { color: var(--grey-500); font-size: 14px; margin: 0 0 22px; }
+
+  .card {
+    background: #fff; border: 1px solid var(--grey-200); border-radius: 12px;
+    padding: 20px 22px; margin-bottom: 18px;
+  }
+  .card h3 {
+    margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .8px;
+    color: var(--green-700);
+  }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .fact { background: var(--grey-50); border: 1px solid var(--grey-200); border-radius: 8px; padding: 10px 12px; }
+  .fact .k { font-size: 12px; color: var(--grey-500); }
+  .fact .v { font-size: 15px; font-weight: 600; }
+  .fact .v.bad { color: var(--red); }
+  .fact .v.warn { color: var(--amber); }
+  .fact .note { font-size: 12px; color: var(--grey-500); margin-top: 2px; }
+  .quote { margin: 14px 0 0; padding: 10px 14px; border-left: 3px solid var(--green-600); background: var(--green-50); border-radius: 0 8px 8px 0; font-size: 14px; }
+
+  .expected { border: 2px solid var(--green-600); }
+  .expected h3 { display: flex; align-items: center; gap: 8px; }
+  .expected .who { font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--grey-500); font-weight: 400; }
+  .q { margin-bottom: 16px; }
+  .q:last-child { margin-bottom: 0; }
+  .q h4 { margin: 0 0 6px; font-size: 15px; color: var(--grey-900); }
+  .answer {
+    min-height: 54px; padding: 12px 14px; border-radius: 8px;
+    border: 1.5px dashed var(--grey-300); background: var(--grey-50);
+    font-size: 14px; color: var(--grey-900);
+  }
+  .answer.todo { color: var(--grey-500); font-style: italic; }
+
+  details.ref { margin-top: 6px; }
+  details.ref summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--green-700); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grey-200); vertical-align: top; }
+  th { color: var(--grey-500); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  td code { background: var(--grey-100); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  .w { color: var(--amber); font-weight: 600; }
+
+  .soon {
+    text-align: center; padding: 70px 24px;
+    background: linear-gradient(160deg, #fff 0%, var(--green-50) 100%);
+    border: 1px solid var(--grey-200); border-radius: 16px;
+  }
+  .soon .icon {
+    width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 28px;
+    background: var(--green-100); color: var(--green-700);
+  }
+  .soon h2 { margin: 0 0 6px; font-size: 24px; }
+  .soon p { margin: 0 auto; max-width: 440px; color: var(--grey-500); }
+  .soon .pill { display: inline-block; margin-top: 18px; padding: 4px 14px; border-radius: 999px; background: var(--grey-900); color: #86efac; font-size: 12px; font-weight: 600; letter-spacing: .5px; }
+  footer { text-align: center; color: var(--grey-500); font-size: 12px; padding-bottom: 30px; }
+
+  .actual { border: 2px solid var(--grey-700); }
+  .actual h3 { color: var(--grey-700); display: flex; align-items: center; gap: 8px; }
+  .actual .who { font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--grey-500); font-weight: 400; }
+  .answer.real { background: #fff; border-style: solid; border-color: var(--grey-200); }
+  .answer ul { margin: 0; padding-left: 18px; }
+  .answer li { margin: 3px 0; }
+  .answer .muted { color: var(--grey-500); }
+  .refused { color: var(--amber); }
+  .ledger { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .ledger th, .ledger td { padding: 10px 12px; border-bottom: 1px solid var(--grey-200); text-align: left; vertical-align: top; }
+  .ledger th { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--grey-500); }
+  .ledger td.num, .ledger th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ledger tr.total td { font-weight: 700; border-top: 2px solid var(--grey-900); border-bottom: 0; }
+  .ledger tr.start td { background: var(--grey-50); }
+  .neg { color: var(--red); } .zero { color: var(--grey-500); }
+  .check-ok { display: inline-block; margin-top: 14px; padding: 8px 14px; border-radius: 8px; background: var(--green-100); color: var(--green-900); font-weight: 600; font-size: 14px; }
+  .mathline { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--grey-700); margin-top: 10px; }
+
+  .reflection-answer p { margin: 0; }
+  .reflection-answer ul { margin: 0; padding-left: 18px; }
+  .reflection-answer li { margin: 3px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Campus Customs <span>· Desk Tickets</span></h1>
+    <div class="desk-date">Shop desk date: <b>2026-08-31</b> · source: <code style="color:#86efac">data/campus_customs_new.db</code></div>
+  </div>
+  <nav>
+    <button class="active" data-tab="t101">Ticket <span class="num">101</span></button>
+    <button data-tab="t102">Ticket <span class="num">102</span></button>
+    <button data-tab="t103">Ticket <span class="num">103</span></button>
+    <span class="sep"></span>
+    <button data-tab="cash">Cash</button>
+    <button data-tab="reflection">Reflection</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ===================================================== TICKET 101 -->
+  <section class="panel active" id="t101">
+    <div class="ticket-head">
+      <h2>#101 · Bulldog tee</h2>
+      <span class="badge">customer_order</span>
+      <span class="badge open">resolved</span>
+    </div>
+    <p class="sub">Raised by Tauhid Zaman · 2026-08-31 09:15</p>
+
+    <div class="card">
+      <h3>Ticket facts (from the database, before the run)</h3>
+      <div class="facts">
+        <div class="fact"><div class="k">Wants</div><div class="v">1 × Classic Bulldog Tee, S</div><div class="note">CC-TEE-WHITE · $28 list / $8 cost</div></div>
+        <div class="fact"><div class="k">Size S on hand</div><div class="v bad">0</div><div class="note">Aisle B · M 5 · L 3 · XL 2</div></div>
+        <div class="fact"><div class="k">Linked invoice 501</div><div class="v warn">$840 · open · 3 days overdue</div><div class="note">Rush reprint CC-TEE-WHITE S · due 2026-08-28</div></div>
+        <div class="fact"><div class="k">Vendor</div><div class="v">Bulldog Print Co</div><div class="note">apparel reprint · 5-day lead time</div></div>
+      </div>
+      <div class="quote">“Needs a tee in size S.”</div>
+    </div>
+
+    <div class="card expected">
+      <h3>Expected <span class="who">· written by Regi</span></h3>
+      <div class="q">
+        <h4>Who the boss should call first, and why</h4>
+        <!-- EXPECTED-101-FIRST -->
+        <div class="answer">The boss calls inventory first to check what is in stock.</div>
+      </div>
+      <div class="q">
+        <h4>All the agent delegations I expect</h4>
+        <!-- EXPECTED-101-DELEGATIONS -->
+        <div class="answer">Inventory then delegates to customer_service, which owns the reply and offers alternatives.</div>
+      </div>
+      <div class="q">
+        <h4>MCP tools I expect the run to use</h4>
+        <!-- EXPECTED-101-TOOLS -->
+        <div class="answer">The tools used are get_ticket, check_stock, and update_ticket.</div>
+      </div>
+    </div>
+  
+    <div class="card actual">
+      <h3>Actual <span class="who">· from run <code>8ec017993f89</code> (audit trail), resolved 11:06:45 AM ET</span></h3>
+      <div class="q">
+        <h4>Who the boss called first, and why</h4>
+        <div class="answer real">The boss called <b>Inventory</b> first, because it's a customer order for a size that has to be checked against stock first.</div>
+      </div>
+      <div class="q">
+        <h4>Agents that worked</h4>
+        <div class="answer real">Boss, Inventory, Customer Service <span class="muted">(3 of 5; not needed: Accounting, Facilities)</span></div>
+      </div>
+      <div class="q">
+        <h4>Agent delegations that happened</h4>
+        <div class="answer real"><ul><li><b>Boss</b> → <b>Inventory</b>: Handle ticket 101: customer order for CC-TEE-WHITE, size S, qty 1. Check stock and fulfill if possible under shop rules; report facts, actions, and whether customer is satisfied/needs contact. Do not close ticket unless fulfillment/customer satisfaction is confirmed.</li><li><b>Boss</b> → <b>Customer Service</b>: For ticket 101, customer requested one CC-TEE-WHITE size S and inventory reports size S out of stock (0), while M/L/XL available. Contact requester Tauhid Zaman to ask whether they prefer an available alternative size or waiting for a backorder; do not promise a date or change size without confirmation. Report contact/outcome and any ticket update.</li></ul></div>
+      </div>
+      <div class="q">
+        <h4>MCP tools the run used</h4>
+        <div class="answer real"><ul><li><b>Boss</b>: <code>get_ticket</code>, <code>add_desk_note</code></li><li><b>Inventory</b>: <code>check_order_fulfillment</code>, <code>check_stock</code></li><li><b>Customer Service</b>: <code>get_ticket</code>, <code>check_stock</code>, <code>update_ticket</code></li></ul></div>
+      </div>
+      <div class="q">
+        <h4>Result</h4>
+        <div class="answer real">Can&#x27;t ship size S (0 on hand). The team documented alternatives (M 5 / L 3 / XL 2) or a backorder for Tauhid; customer outreach and any reorder are left to a human. No money moved. <b>Cash change: ±$0.00.</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== TICKET 102 -->
+  <section class="panel" id="t102">
+    <div class="ticket-head">
+      <h2>#102 · Rent due</h2>
+      <span class="badge">rent_notice</span>
+      <span class="badge open">resolved</span>
+    </div>
+    <p class="sub">Raised by Elm City Properties · 2026-08-31 11:05</p>
+
+    <div class="card">
+      <h3>Ticket facts (from the database, before the run)</h3>
+      <div class="facts">
+        <div class="fact"><div class="k">Lease 1</div><div class="v">Chapel Street shop</div><div class="note">Landlord: Elm City Properties</div></div>
+        <div class="fact"><div class="k">Rent</div><div class="v warn">$2,400 · due in 2 days</div><div class="note">next_due 2026-09-02 · not yet paid</div></div>
+        <div class="fact"><div class="k">Checking balance</div><div class="v">$3,400</div><div class="note">as of 2026-08-31</div></div>
+        <div class="fact"><div class="k">Other bill on the same cash</div><div class="v warn">Invoice 501 · $840</div><div class="note">Rent + 501 = $3,240 → $160 left</div></div>
+      </div>
+      <div class="quote">“Email: shop rent due in 2 days.”</div>
+    </div>
+
+    <div class="card expected">
+      <h3>Expected <span class="who">· written by Regi</span></h3>
+      <div class="q">
+        <h4>Who the boss should call first, and why</h4>
+        <!-- EXPECTED-102-FIRST -->
+        <div class="answer">The boss calls facilities first since rent is due.</div>
+      </div>
+      <div class="q">
+        <h4>All the agent delegations I expect</h4>
+        <!-- EXPECTED-102-DELEGATIONS -->
+        <div class="answer">Facilities then calls accounting to pay the rent on the ticket.</div>
+      </div>
+      <div class="q">
+        <h4>MCP tools I expect the run to use</h4>
+        <!-- EXPECTED-102-TOOLS -->
+        <div class="answer">The tools used are get_ticket, get_lease, get_cash_position, record_payment, and update_ticket.</div>
+      </div>
+    </div>
+  
+    <div class="card actual">
+      <h3>Actual <span class="who">· from run <code>007ea4d28c8a</code> (audit trail), resolved 11:04:12 AM ET</span></h3>
+      <div class="q">
+        <h4>Who the boss called first, and why</h4>
+        <div class="answer real">The boss called <b>Accounting</b> first, because rent is a payment, and only accounting can record payments (the boss sent it straight there instead of through facilities).</div>
+      </div>
+      <div class="q">
+        <h4>Agents that worked</h4>
+        <div class="answer real">Boss, Accounting <span class="muted">(2 of 5; not needed: Inventory, Facilities, Customer Service)</span></div>
+      </div>
+      <div class="q">
+        <h4>Agent delegations that happened</h4>
+        <div class="answer real"><ul><li><b>Boss</b> → <b>Accounting</b>: Handle rent notice ticket 102 (lease_id 1): check the lease rent due date/amount and any existing payment status; take any permitted next step toward paying rent, noting that payments require human approval. Report facts and actions, and whether ticket can be closed.</li></ul></div>
+      </div>
+      <div class="q">
+        <h4>MCP tools the run used</h4>
+        <div class="answer real"><ul><li><b>Boss</b>: <code>get_ticket</code>, <code>get_cash_position</code>, <code>update_ticket</code>, <code>add_desk_note</code></li><li><b>Accounting</b>: <code>get_ticket</code>, <code>get_cash_position</code>, <code>record_payment</code></li></ul></div>
+      </div>
+      <div class="q">
+        <h4>Result</h4>
+        <div class="answer real">Rent of $2,400 for the Chapel Street shop was queued by accounting and approved on the board, paid to Elm City Properties from checking. <b>Cash change: −$2,400.00.</b> Human approval: af6205a0: $2,400.00 lease payment to Elm City Properties, approved by <b>Regi</b> on the board at 11:04:00 AM ET (payment #1).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== TICKET 103 -->
+  <section class="panel" id="t103">
+    <div class="ticket-head">
+      <h2>#103 · Bulk hoodie discount</h2>
+      <span class="badge">price_override</span>
+      <span class="badge open">resolved</span>
+    </div>
+    <p class="sub">Raised by Yale AI Club · 2026-08-31 16:55</p>
+
+    <div class="card">
+      <h3>Ticket facts (from the database, before the run)</h3>
+      <div class="facts">
+        <div class="fact"><div class="k">Wants</div><div class="v">20 × Basic Hoodie Big Yale, M</div><div class="note">CC-HOOD-NAVY · discount requested</div></div>
+        <div class="fact"><div class="k">Size M on hand</div><div class="v bad">8 (12 short)</div><div class="note">Aisle A · S 4 · L 14 · XL 6 · 32 total</div></div>
+        <div class="fact"><div class="k">Price</div><div class="v">$58 list / $22 cost</div><div class="note">20 at list = $1,160 · cost floor $440</div></div>
+        <div class="fact"><div class="k">Deepest discount at cost</div><div class="v">62.1%</div><div class="note">Restock vendor: Bulldog Print Co · 5 days</div></div>
+      </div>
+      <div class="quote">“Student org wants 20 hoodies, size M, asking for a bulk discount.”</div>
+    </div>
+
+    <div class="card expected">
+      <h3>Expected <span class="who">· written by Regi</span></h3>
+      <div class="q">
+        <h4>Who the boss should call first, and why</h4>
+        <!-- EXPECTED-103-FIRST -->
+        <div class="answer">The boss calls customer_service first to speak to the customer.</div>
+      </div>
+      <div class="q">
+        <h4>All the agent delegations I expect</h4>
+        <!-- EXPECTED-103-DELEGATIONS -->
+        <div class="answer">Customer service then calls accounting for a discount.</div>
+      </div>
+      <div class="q">
+        <h4>MCP tools I expect the run to use</h4>
+        <!-- EXPECTED-103-TOOLS -->
+        <div class="answer">The tools used are get_ticket, check_stock, quote_bulk_discount, and update_ticket.</div>
+      </div>
+    </div>
+  
+    <div class="card actual">
+      <h3>Actual <span class="who">· from run <code>34042387cb57</code> (audit trail), resolved 11:07:10 AM ET</span></h3>
+      <div class="q">
+        <h4>Who the boss called first, and why</h4>
+        <div class="answer real">The boss called <b>Inventory</b> first, because the club wants 20 hoodies, so stock had to be checked before any discount talk.</div>
+      </div>
+      <div class="q">
+        <h4>Agents that worked</h4>
+        <div class="answer real">Boss, Inventory, Customer Service, Accounting <span class="muted">(4 of 5; not needed: Facilities)</span></div>
+      </div>
+      <div class="q">
+        <h4>Agent delegations that happened</h4>
+        <div class="answer real"><ul><li><b>Boss</b> → <b>Inventory</b>: For ticket 103 (Yale AI Club, CC-HOOD-NAVY size M, quantity 20), check current stock and relevant unit price/cost if available, and report facts plus whether the requested quantity can be fulfilled. Do not change anything.</li><li><b>Boss</b> → <b>Customer Service</b>: Handle customer-facing review of ticket 103: Yale AI Club asks for a bulk discount on 20 CC-HOOD-NAVY hoodies size M. Check available pricing/discount policy, recommend a response or required approval, and report any reply/action taken. Do not promise an unapproved price.</li><li><b>Customer Service</b> → <b>Boss</b>: Ticket 103: Yale AI Club requests a bulk discount for 20 CC-HOOD-NAVY hoodies size M. Please confirm whether there is an authorized discount/approval policy or approve a specific discount/price for this request. Quote tool reports list price $58, unit cost $22, max discount 62.1% to remain at cost, but only 8 size M are on hand (shortfall 12). Do not assume stock can be replenished; report any required human decision and exact authorized price/discount if available. <span class="refused">(refused by the loop guard: boss was already in the chain)</span></li><li><b>Inventory</b> → <b>Accounting</b>: For ticket 103 (CC-HOOD-NAVY size M, quantity 20), check whether relevant unit price and/or cost is available in shop records. Do not change anything. Report exact facts and source.</li></ul></div>
+      </div>
+      <div class="q">
+        <h4>MCP tools the run used</h4>
+        <div class="answer real"><ul><li><b>Boss</b>: <code>get_ticket</code>, <code>add_desk_note</code></li><li><b>Inventory</b>: <code>get_ticket</code>, <code>check_stock</code></li><li><b>Customer Service</b>: <code>get_ticket</code>, <code>quote_bulk_discount</code></li><li><b>Accounting</b>: <code>get_ticket</code>, <code>quote_bulk_discount</code></li></ul></div>
+      </div>
+      <div class="q">
+        <h4>Result</h4>
+        <div class="answer real">Quoted at list ($58, cost $22). Only 8 of 20 size-M on hand (12 short). No discount offered without a human&#x27;s OK; customer service drafted a reply. No money moved. <b>Cash change: ±$0.00.</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== CASH -->
+  <section class="panel" id="cash">
+    <div class="card">
+      <h3>Checking account · itemized for the Problem 9 run</h3>
+      <table class="ledger">
+        <tr><th>Step</th><th>What happened and why</th><th class="num">Change</th><th class="num">Balance</th></tr>
+        <tr class="start"><td>Starting balance</td><td>After the database reset at 11:03:00 AM ET (desk date 2026-08-31); matches the original <code>campus_customs.db</code>.</td><td class="num"></td><td class="num">$3,400.00</td></tr><tr><td>Ticket #102 · Rent due<br><span style="color:var(--grey-500);font-size:12px">resolved 11:04:12 AM ET</span></td><td>Payment #1: lease 1 (rent for Chapel Street shop) paid to <b>Elm City Properties</b> from checking, $2,400.00, queued by accounting and approved by <b>Regi</b> on the board (approval af6205a0).</td><td class="num neg">−$2,400.00</td><td class="num">$1,000.00</td></tr><tr><td>Ticket #101 · Bulldog tee<br><span style="color:var(--grey-500);font-size:12px">resolved 11:06:45 AM ET</span></td><td>No payment or purchase. Size S was out of stock, so the team offered M/L/XL or a backorder. Invoice 501 ($840 rush reprint from Bulldog Print Co) was left open: no agent queued it, which matches the rule that rush reprints are never worth it, and reorders are a human decision.</td><td class="num zero">±$0.00</td><td class="num">$1,000.00</td></tr><tr><td>Ticket #103 · Bulk hoodie discount<br><span style="color:var(--grey-500);font-size:12px">resolved 11:07:10 AM ET</span></td><td>No sale, discount, or purchase was booked. Only 8 of 20 size-M hoodies are on hand and no discount was authorized, so customer service drafted a reply and the decisions went to a human.</td><td class="num zero">±$0.00</td><td class="num">$1,000.00</td></tr><tr class="total"><td>Ending checking balance</td><td><code>cash_accounts</code> → checking in <code>campus_customs_new.db</code> = $1,000.00 (as of 2026-08-31)</td><td class="num neg">−$2,400.00</td><td class="num">$1,000.00</td></tr>
+      </table>
+      <div class="mathline">$3,400.00 − $2,400.00 = $1,000.00 &nbsp;·&nbsp; payments table: 1 row(s), total $2,400.00</div>
+      <div class="check-ok">✓ Ending balance $1,000.00 matches cash_accounts (checking = $1,000.00)</div>
+    </div>
+    <div class="card">
+      <h3>Still owed (not paid in this run)</h3>
+      <p style="margin:0;font-size:14px">Invoice 501: $840.00 to Bulldog Print Co (Rush reprint CC-TEE-WHITE S), due 2026-08-28, status <b>open</b>.
+      Paying it now would leave $160.00, below accounting's $500 warning line. The balance after this run ($1,000.00) is above it, so no warning was needed.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== REFLECTION -->
+  <section class="panel" id="reflection">
+    <div class="card expected">
+      <h3>Reflection <span class="who">· written by Regi, after the Problem 9 run</span></h3>
+      <div class="q">
+        <h4>1. How would you evaluate the performance of the agents on each ticket and why?</h4>
+        <div class="answer reflection-answer"><p>I think that for ticket 102 (rent), the agents did an excellent job in both assessing and solving the problem, completing the process in about the same manner I expected them to. However, for tickets 101 and 103, I don&#x27;t think they did well at all. For ticket 101, the customer_service agent didn&#x27;t reach out to Tauhid to check if he wanted the shirt in another size. And in ticket 103, no agent reached out to me to see if there was an alternative method.</p></div>
+      </div>
+      <div class="q">
+        <h4>2. For each ticket, how did the Actual compare to the Expected plan you wrote earlier?</h4>
+        <div class="answer reflection-answer"><p>For ticket 101,  agents were called in the order I expected. However, the customer_service agent did not prompt me to reply to Tauhid at all. I did not account for this. For ticket 102, the agents were more efficient than I expected, with the Boss immediately calling Accounting to pay for rent, completely bypassing Facilities. Other than that, the problem was resolved in the manner I expected. For ticket 103, I mistakenly believed Inventory wouldn&#x27;t be called, so I predicted one too few many agent calls. But as with ticket 101, I was disappointed that there was no prompting about a need for human intervention.</p></div>
+      </div>
+      <div class="q">
+        <h4>3. What would have been simpler as one agent with tools -- and why?</h4>
+        <div class="answer reflection-answer"><p>I think for problems this small, just having a single agent solve everything would have been more efficient. The problems would have been resolved much faster as there would be no need to fill other agents in on context.</p></div>
+      </div>
+      <div class="q">
+        <h4>4. Describe 3 new problem Campus Customs might face that this agent could solve with the tools you built.</h4>
+        <div class="answer reflection-answer"><ul><li>Invoices related to facilities</li><li>Questions about inventory alternatives</li><li>Day to day management of employees</li></ul></div>
+      </div>
+      <div class="q">
+        <h4>5. Describe 3 new problems Campus Customs might face that this agent team could not solve with the tools you built, and explain the tools and agents you would need to solve them.</h4>
+        <div class="answer reflection-answer"><ul><li>Interactions with future collaborators (brand partnerships, etc.) -- would need to empower Customer_service agent to speak with humans</li><li>Site maintenance -- would need to create another agent that was solely focused on that</li><li>Employee management -- agents are not equipped to figure out how salaries affect cash. Would need to create another agent for HR purposes, or give Accounting agent tools to access employee salaries</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== TEAM REFERENCE (all ticket tabs) -->
+  <div class="card" id="team-ref">
+    <details class="ref">
+      <summary>Team reference: who has which tools</summary>
+      <table>
+        <tr><th>Agent</th><th>MCP tools</th><th>Its shop rules (short)</th></tr>
+        <tr><td><b>boss</b></td><td><code>list_open_tickets</code> <code>get_ticket</code> <code>get_cash_position</code> <code>update_ticket</code><sup class="w">w</sup> <code>add_desk_note</code><sup class="w">w</sup></td><td>Rent first; close when the requester is satisfied; readable desk notes</td></tr>
+        <tr><td><b>inventory</b></td><td><code>check_order_fulfillment</code> <code>check_stock</code> <code>fulfill_order</code><sup class="w">w</sup> <code>list_vendors</code> <code>get_ticket</code></td><td>Offer stock if it covers the order; else another size or backorder; reorders are a human call; suggest dates, don't promise</td></tr>
+        <tr><td><b>accounting</b></td><td><code>get_cash_position</code> <code>quote_bulk_discount</code> <code>record_payment</code><sup class="w">w</sup> <code>list_vendors</code> <code>get_ticket</code></td><td>Rent first; warn under $500; never below cost; step discounts up gradually; rush reprints never worth it</td></tr>
+        <tr><td><b>facilities</b></td><td><code>get_lease</code> <code>get_ticket</code> <code>update_ticket</code><sup class="w">w</sup></td><td>Pay rent 10–15 days early; alert a human if funds are short; only pass the ticket on</td></tr>
+        <tr><td><b>customer_service</b></td><td><code>get_ticket</code> <code>list_open_tickets</code> <code>check_stock</code> <code>quote_bulk_discount</code> <code>update_ticket</code><sup class="w">w</sup></td><td>Polite and friendly; fill bulk orders if stock covers them, else alert a human; simple replies sent, complex ones drafted</td></tr>
+      </table>
+      <p style="font-size:12px;color:var(--grey-500);margin:10px 0 0">
+        <sup class="w">w</sup> = write tool (only when a run uses <code>--allow-writes</code>; payments also need <code>--approver</code>).
+        Every agent can also <code>delegate</code> to any teammate, at most 2 levels deep (boss → A → B).
+      </p>
+    </details>
+  </div>
+
+</main>
+
+<footer>Campus Customs · Homework 5 · desk_tickets.html</footer>
+
+<script>
+  const buttons = document.querySelectorAll("nav button");
+  const ref = document.getElementById("team-ref");
+  function show(id) {
+    buttons.forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+    document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === id));
+    ref.style.display = id.startsWith("t") ? "" : "none";  // reference only on ticket tabs
+    history.replaceState(null, "", "#" + id);
+  }
+  buttons.forEach(b => b.addEventListener("click", () => show(b.dataset.tab)));
+  const start = location.hash.slice(1);
+  if (document.getElementById(start)) show(start);
+</script>
+</body>
+</html>
